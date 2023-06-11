@@ -1,7 +1,49 @@
-import React from "react";
+import React, { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import axios from "axios";
 import styled from "styled-components";
 
 export default function SignIn() {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [isEmailValid, setIsEmailValid] = useState(true);
+  const [isPasswordValid, setIsPasswordValid] = useState(true);
+
+  const navigate = useNavigate();
+
+  const handleSignIn = async () => {
+    const isEmailValid = validateEmail(email);
+    const isPasswordValid = validatePassword(password);
+
+    setIsEmailValid(isEmailValid);
+    setIsPasswordValid(isPasswordValid);
+
+    if (isEmailValid && isPasswordValid) {
+      try {
+        const response = await axios.post(
+          "https://www.pre-onboarding-selection-task.shop/auth/signin",
+          {
+            email: email,
+            password: password,
+          }
+        );
+        const access_token = response.data.access_token;
+        localStorage.setItem("access_token", access_token);
+        navigate("/todo");
+      } catch (error) {
+        console.error("로그인 에러:", error);
+      }
+    }
+  };
+
+  const validateEmail = (value) => {
+    return value.includes("@");
+  };
+
+  const validatePassword = (value) => {
+    return value.length >= 8;
+  };
+
   return (
     <SignInContainer>
       <SignInFormContainer>
@@ -9,14 +51,33 @@ export default function SignIn() {
         <SignInInput
           type="text"
           placeholder="이메일"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
           data-testid="email-input"
+          isValid={isEmailValid}
         />
+        {!isEmailValid && (
+          <ErrorMessage>이메일 형식이 올바르지 않습니다.</ErrorMessage>
+        )}
         <SignInInput
           type="password"
           placeholder="비밀번호"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
           data-testid="password-input"
+          isValid={isPasswordValid}
         />
-        <SignInButton data-testid="signin-button">로그인</SignInButton>
+        {!isPasswordValid && (
+          <ErrorMessage>비밀번호는 8자 이상이어야 합니다.</ErrorMessage>
+        )}
+        <div>
+          <SignInButton data-testid="signin-button" onClick={handleSignIn}>
+            로그인
+          </SignInButton>
+          <Link to="/signup">
+            <SignInButton type="button">회원가입</SignInButton>
+          </Link>
+        </div>
       </SignInFormContainer>
     </SignInContainer>
   );
@@ -52,7 +113,7 @@ const SignInInput = styled.input`
   padding: 10px;
   margin-bottom: 10px;
   width: 300px;
-  border: 1px solid #ccc;
+  border: 1px solid ${({ isValid }) => (isValid ? "#ccc" : "red")};
   border-radius: 4px;
   outline: none;
 `;
@@ -65,8 +126,15 @@ const SignInButton = styled.button`
   border-radius: 4px;
   cursor: pointer;
   font-weight: bold;
+  margin: 25px;
 
   &:hover {
     background-color: #ff5858;
   }
+`;
+
+const ErrorMessage = styled.p`
+  color: red;
+  font-size: 12px;
+  margin-bottom: 10px;
 `;

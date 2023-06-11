@@ -19,7 +19,7 @@ export default function SignUp() {
     if (hasAtSymbol && password.length >= 8) {
       try {
         const response = await axios.post(
-          " https://www.pre-onboarding-selection-task.shop/auth/signup",
+          "https://www.pre-onboarding-selection-task.shop/auth/signup",
           {
             email,
             password,
